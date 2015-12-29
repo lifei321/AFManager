@@ -20,6 +20,15 @@ typedef void(^ResultBlock)(id responseobject,NSError *error);
 typedef void(^DownloadBlock)(id responseo,id filepath,NSError *error);
 
 
+//下载的回调
+typedef void(^DownloadBlock)(id responseo,id filepath,NSError *error);
+
+
+//下载进度回调
+typedef void (^DownloadProgressBlock)(NSInteger bytesRead, long long totalBytesRead, long long totalBytesExpected, long long totalBytesReadForFile, long long totalBytesExpectedToReadForFile);
+
+
+
 //上传的回调
 typedef void(^uploadBlock)(NSURLSessionDataTask *task,id responseObject,NSError *error);
 
@@ -72,6 +81,21 @@ typedef NS_ENUM(NSUInteger,RequestType) {
  *
  */
 -(void)DownloadUrl:(NSString *)urlString downloadpath:(NSString *)downloadpath downloadblock:(DownloadBlock)downloadblock;
+
+
+/**
+ *  带有下载进度的下载
+ *  urlString : 下载地址
+ *  downloadpath : 保存的路径
+ *  resultBlock: 下载完成或者失败的回调
+ *  DownloadProgressBlock: 下载过程的回调
+ *  bytesRead : 下载地址
+ *  totalBytesRead : 下载地址
+ *  totalBytesExpected : 下载地址
+ *  totalBytesReadForFile : 已下载的文件大小
+ *  totalBytesExpectedToReadForFile : 文件总大小
+ */
+-(void)DownloadUrl:(NSString *)urlString downloadpath:(NSString *)downloadpath requestblock:(ResultBlock)resultBlock Progress:(DownloadProgressBlock)DownloadProgressBlock;
 
 /**
  *  上传单张照片

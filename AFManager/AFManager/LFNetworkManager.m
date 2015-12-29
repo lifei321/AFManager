@@ -12,7 +12,7 @@
 #import "LFNetworkManager.h"
 #import "AFNetworkReachabilityManager.h"
 #import "AFNetworking.h"
-
+#import "AFDownloadRequestOperation.h"
 
 // MD5加密
 #import <CommonCrypto/CommonDigest.h>
@@ -76,7 +76,7 @@
     return self;
 }
 
-#pragma mark -单例
+#pragma mark-   单例
 +(instancetype)sharedManager
 {
     static LFNetworkManager *sharedManager = nil;
@@ -90,7 +90,7 @@
 }
 
 
-#pragma mark -获取网络状态
+#pragma mark-   获取网络状态
 + (void)ReachabilityBlock:(ReachabilitySuccessBlock)success
 {
     AFNetworkReachabilityManager *ReachabilityManager = [AFNetworkReachabilityManager sharedManager];
@@ -113,7 +113,7 @@
     }];
 }
 
-#pragma makr - 开始监听网络连接
+#pragma makr- 开始监听网络连接
 
 + (void)startMonitoring
 {
@@ -141,7 +141,7 @@
     [mgr startMonitoring];
 }
 
-#pragma mark -普通网络访问get post
+#pragma mark-   普通网络访问get post
 -(void)RequestType:(RequestType)type Url:(NSString *)urlString parameters:(id)parameters requestblock:(ResultBlock)resultBlock
 {
     switch (type) {
@@ -162,7 +162,7 @@
         {
             [_Manager POST:urlString parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
                 
-                resultBlock(resultBlock,nil);
+                resultBlock(responseObject,nil);
                 
             } failure:^(NSURLSessionDataTask *task, NSError *error) {
                 
@@ -176,7 +176,7 @@
     }
 }
 
-#pragma mark -下载
+#pragma mark-   下载
 -(void)DownloadUrl:(NSString *)urlString downloadpath:(NSString *)downloadpath downloadblock:(DownloadBlock)downloadblock
 {
     NSProgress *progress = nil;
@@ -195,8 +195,48 @@
     [self.task resume];
 }
 
-
-
+#pragma mark-   带有下载进度的下载
+-(void)DownloadUrl:(NSString *)urlString downloadpath:(NSString *)downloadpath requestblock:(ResultBlock)resultBlock Progress:(DownloadProgressBlock)DownloadProgressBlock
+{
+    NSURL *url = [NSURL URLWithString:urlString];
+    
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:3600];
+    
+    AFDownloadRequestOperation *operation = [[AFDownloadRequestOperation alloc] initWithRequest:request targetPath:downloadpath shouldResume:YES];
+    
+    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        resultBlock(responseObject,nil);
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        
+        resultBlock(nil,error);
+    }];
+    
+    [operation setProgressiveDownloadProgressBlock:^(AFDownloadRequestOperation *operation, NSInteger bytesRead, long long totalBytesRead, long long totalBytesExpected, long long totalBytesReadForFile, long long totalBytesExpectedToReadForFile) {
+        
+        
+        DownloadProgressBlock(bytesRead,totalBytesRead,totalBytesExpected,totalBytesReadForFile,totalBytesExpectedToReadForFile);
+        
+//        float percentDone = totalBytesReadForFile/(float)totalBytesExpectedToReadForFile;
+//        
+//        self.progressView.progress = percentDone;
+//        self.progressLabel.text = [NSString stringWithFormat:@"%.0f%%",percentDone*100];
+//        
+//        self.currentSizeLabel.text = [NSString stringWithFormat:@"CUR : %lli M",totalBytesReadForFile/1024/1024];
+//        
+//        self.totalSizeLabel.text = [NSString stringWithFormat:@"TOTAL : %lli M",totalBytesExpectedToReadForFile/1024/1024];
+        
+//        NSLog(@"------%f",percentDone);
+//        NSLog(@"Operation%i: bytesRead: %d", 1, bytesRead);
+//        NSLog(@"Operation%i: totalBytesRead: %lld", 1, totalBytesRead);
+//        NSLog(@"Operation%i: totalBytesExpected: %lld", 1, totalBytesExpected);
+//        NSLog(@"Operation%i: totalBytesReadForFile: %lld", 1, totalBytesReadForFile);
+//        NSLog(@"Operation%i: totalBytesExpectedToReadForFile: %lld", 1, totalBytesExpectedToReadForFile);
+        
+    }];
+    [operation start];
+}
 
 
 //MD5
@@ -227,7 +267,7 @@
     return [NSString stringWithFormat:@"%@.png",[self md5String:time]];
 }
 
-#pragma mark -上传单张
+#pragma mark-   上传单张
 -(void)UploadUrl:(NSString*)uploadpath parameters:(NSDictionary *)dic imageData:(NSData *)imagData uploadblock:(uploadBlock)uploadblock
 {
     [_Manager POST:uploadpath parameters:dic constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
@@ -253,7 +293,7 @@
 
 }
 
-#pragma mark -上传多张
+#pragma mark-  上传多张
 -(void)UploadUrl:(NSString*)uploadpath parameters:(NSDictionary *)dic DataARR:(NSMutableArray *)DataARR uploadblock:(uploadBlock)uploadblock
 {
     [_Manager POST:uploadpath parameters:dic constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
